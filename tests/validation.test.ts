@@ -10,7 +10,9 @@ import { todayInCostaRica } from "../src/lib/format";
 const valid = {
   date: "2099-01-05",
   scheduleId: "9a72c95f-5c97-4403-a282-a990e6a5ec1c",
-  participants: 2,
+  adults: 2,
+  children: 0,
+  referralCode: "",
   fullName: "Cliente de prueba",
   email: "test@example.com",
   phone: "+506 8888 8888",
@@ -30,9 +32,9 @@ test("uses Costa Rica's date around UTC midnight", () => {
 });
 test("requires consent and a bounded group size", () => {
   assert.equal(reservationSchema.safeParse(valid).success, true);
-  for (const participants of [0, -1, 1.5, 51])
+  for (const adults of [0, -1, 1.5, 51])
     assert.equal(
-      reservationSchema.safeParse({ ...valid, participants }).success,
+      reservationSchema.safeParse({ ...valid, adults }).success,
       false,
     );
   assert.equal(

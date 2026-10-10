@@ -11,7 +11,9 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:local": "node scripts/local-db.mjs",
     "test": "node --import tsx --test tests/*.test.ts",
-    "test:integration": "node --import tsx --test tests/booking.integration.ts"
+    "test:integration": "node --import tsx --test tests/booking.integration.ts",
+    "escritorio": "node scripts/windows.mjs shortcut",
+    "abrir": "node scripts/windows.mjs start"
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",

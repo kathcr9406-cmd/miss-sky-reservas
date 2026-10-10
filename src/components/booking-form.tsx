@@ -8,8 +8,6 @@ import {
   CalendarDays,
   Clock3,
   Users,
-  Minus,
-  Plus,
   Info,
   ShieldCheck,
   Check,
@@ -36,7 +34,9 @@ export function BookingForm({
   const [step, setStep] = useState(1);
   const [date, setDate] = useState("");
   const [scheduleId, setScheduleId] = useState("");
-  const [participants, setParticipants] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const participants = adults + children;
   const [availability, setAvailability] = useState<Availability>({
     configured: false,
     slots: [],
@@ -49,6 +49,7 @@ export function BookingForm({
     email: "",
     phone: "",
     notes: "",
+    referralCode: "",
     consent: false,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -109,7 +110,13 @@ export function BookingForm({
       );
       return false;
     }
-    if (!slot || slot.remaining < participants) {
+    if (
+      participants < 1 ||
+      !slot ||
+      slot.remaining < participants ||
+      slot.remainingAdults < adults ||
+      slot.remainingChildren < children
+    ) {
       setError("Selecciona un horario con cupos para todo tu grupo.");
       return false;
     }
@@ -125,7 +132,8 @@ export function BookingForm({
     const parsed = reservationSchema.safeParse({
       date,
       scheduleId,
-      participants,
+      adults,
+      children,
       ...fields,
     });
     if (!parsed.success) {
@@ -208,7 +216,8 @@ export function BookingForm({
           <span>{formatDate(date)}</span>
           <span>{slot && formatTime(slot.startsAt)}</span>
           <span>
-            {participants} {participants === 1 ? "persona" : "personas"}
+            {participants} {participants === 1 ? "persona" : "personas"} (
+            {adults} adultos, {children} niños)
           </span>
         </div>
         <strong>
@@ -232,9 +241,11 @@ export function BookingForm({
               email: "",
               phone: "",
               notes: "",
+              referralCode: "",
               consent: false,
             });
-            setParticipants(1);
+            setAdults(1);
+            setChildren(0);
             setAvailability({ configured: false, slots: [] });
           }}
         >
@@ -299,41 +310,40 @@ export function BookingForm({
                     <label className="field-label">
                       <Users size={15} /> Participantes <span>*</span>
                     </label>
-                    <div className="participant-counter">
-                      <span>
-                        <strong>{participants}</strong>
-                        <small>
-                          {participants === 1 ? "persona" : "personas"}
-                        </small>
-                      </span>
-                      <div>
-                        <button
-                          type="button"
-                          className="counter-button"
-                          aria-label="Quitar una persona"
-                          disabled={participants === 1}
-                          onClick={() => {
-                            setParticipants((p) => p - 1);
-                            setError("");
-                          }}
-                        >
-                          <Minus size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          className="counter-button"
-                          aria-label="Agregar una persona"
-                          disabled={participants === 50}
-                          onClick={() => {
-                            setParticipants((p) => p + 1);
+                    <div className="age-inputs">
+                      <label>
+                        Adultos
+                        <input
+                          aria-label="Adultos"
+                          type="number"
+                          min={0}
+                          max={50 - children}
+                          value={adults}
+                          onChange={(e) => {
+                            setAdults(Number(e.target.value));
                             setScheduleId("");
-                            setError("");
                           }}
-                        >
-                          <Plus size={15} />
-                        </button>
-                      </div>
+                        />
+                      </label>
+                      <label>
+                        Niños
+                        <input
+                          aria-label="Niños"
+                          type="number"
+                          min={0}
+                          max={50 - adults}
+                          value={children}
+                          onChange={(e) => {
+                            setChildren(Number(e.target.value));
+                            setScheduleId("");
+                          }}
+                        />
+                      </label>
                     </div>
+                    <p>
+                      {adults} adultos · {children} niños · {participants}{" "}
+                      personas
+                    </p>
                     <span className="field-hint">
                       Una tarifa general por persona.
                     </span>
@@ -353,7 +363,12 @@ export function BookingForm({
                           <button
                             type="button"
                             key={s.id}
-                            disabled={s.remaining < participants}
+                            disabled={
+                              participants < 1 ||
+                              s.remaining < participants ||
+                              s.remainingAdults < adults ||
+                              s.remainingChildren < children
+                            }
                             className={`slot-button ${scheduleId === s.id ? "selected" : ""}`}
                             onClick={() => {
                               setScheduleId(s.id);
@@ -366,6 +381,10 @@ export function BookingForm({
                               {s.remaining === 0
                                 ? "Sin cupos"
                                 : `${s.remaining} cupos`}
+                            </small>
+                            <small>
+                              {s.remainingAdults} adultos ·{" "}
+                              {s.remainingChildren} niños disponibles
                             </small>
                           </button>
                         ))}
@@ -490,6 +509,19 @@ export function BookingForm({
                   )}
                 </div>
                 <div className="field full">
+                  <label htmlFor="referralCode">
+                    Código de quien te recomendó (opcional)
+                  </label>
+                  <input
+                    id="referralCode"
+                    name="referralCode"
+                    maxLength={40}
+                    value={fields.referralCode}
+                    onChange={(e) =>
+                      updateField("referralCode", e.target.value.toUpperCase())
+                    }
+                    placeholder="Empresa o persona que te recomendó"
+                  />
                   <label htmlFor="notes">
                     ¿Algo que debamos saber? <small>Opcional</small>
                   </label>

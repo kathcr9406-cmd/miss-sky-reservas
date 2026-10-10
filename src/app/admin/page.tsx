@@ -1,6 +1,11 @@
 import { authenticated, authConfigured } from "@/lib/auth";
 import { databaseConfigured } from "@/lib/db";
-import { getSettings, getBookings, getSchedules } from "@/lib/tours";
+import {
+  getSettings,
+  getBookings,
+  getSchedules,
+  getOverview,
+} from "@/lib/tours";
 import { todayInCostaRica } from "@/lib/format";
 import { AdminLogin } from "@/components/admin-login";
 import { AdminDashboard } from "@/components/admin-dashboard";
@@ -14,12 +19,15 @@ export default async function AdminPage() {
   let bookings: Booking[] = [];
   let schedules: Schedule[] = [];
   let connected = false;
+  const today = todayInCostaRica();
+  let overview = { reservations: 0, people: 0, unpaid: 0 };
   if (databaseConfigured()) {
     try {
-      [settings, bookings, schedules] = await Promise.all([
+      [settings, bookings, schedules, overview] = await Promise.all([
         getSettings(),
         getBookings(),
         getSchedules(),
+        getOverview(today),
       ]);
       connected = true;
     } catch {
@@ -32,7 +40,8 @@ export default async function AdminPage() {
       bookings={bookings}
       schedules={schedules}
       connected={connected}
-      today={todayInCostaRica()}
+      today={today}
+      overview={overview}
     />
   );
 }

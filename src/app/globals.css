@@ -2113,3 +2113,105 @@ h2 {
     transition-duration: 0.01ms !important;
   }
 }
+
+.official-logo {
+  width: 150px;
+  height: 76px;
+  object-fit: contain;
+}
+.brand-light .official-logo {
+  background: white;
+  border-radius: 8px;
+  padding: 6px;
+}
+.admin-sidebar .official-logo {
+  width: 185px;
+  height: 100px;
+}
+@media (max-width: 600px) {
+  .official-logo {
+    width: 108px;
+    height: 62px;
+  }
+}
+
+.age-inputs,
+.daily-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.age-inputs label,
+.operation-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.age-inputs input,
+.operation-form input,
+.operation-form select,
+.admin-card-body > label input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d3decb;
+  border-radius: 8px;
+  background: white;
+  color: #183e32;
+}
+.age-inputs input[type="checkbox"] {
+  width: auto;
+}
+.operation-form {
+  display: grid;
+  gap: 18px;
+  max-width: 640px;
+  margin-top: 24px;
+}
+.operation-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.operation-summary {
+  border: 1px solid #d3decb;
+  border-radius: 12px;
+  padding: 22px;
+  margin: 18px 0;
+  background: #f7f9f2;
+}
+.operation-summary p {
+  margin-top: 12px;
+}
+.success-message {
+  padding: 16px;
+  color: #1b5738;
+  background: #edf6e7;
+}
+.admin-card-body > label {
+  display: block;
+  max-width: 280px;
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .daily-slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+.data-table button {
+  border: 1px solid #c9d8c1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #204a38;
+  background: white;
+  cursor: pointer;
+  font-size: 11px;
+}
+.data-table button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.operation-form + .success-message,
+.operation-form + .error-message {
+  margin-top: 16px;
+}

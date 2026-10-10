@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Mountain, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
@@ -8,15 +9,13 @@ export function Brand({ light = false }: { light?: boolean }) {
       className={`brand ${light ? "brand-light" : ""}`}
       aria-label="Miss Sky — inicio"
     >
-      <span className="brand-icon">
-        <Mountain size={25} strokeWidth={1.6} />
-      </span>
-      <span>
-        <strong>
-          MISS SKY<span className="brand-dot">.</span>
-        </strong>
-        <small>CANOPY TOUR</small>
-      </span>
+      <Image
+        src="/miss-sky-logo.png"
+        alt="Miss Sky Canopy Tour"
+        width={432}
+        height={230}
+        className="official-logo"
+      />
     </Link>
   );
 }

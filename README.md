@@ -1,16 +1,14 @@
 # Miss Sky Canopy Tour — Sistema de Reservaciones
 
-Aplicación web en español con **Next.js 16, TypeScript, Tailwind CSS 4 y PostgreSQL 17**. Esta primera etapa incluye la identidad visual, el formulario público de reserva, el acceso privado del personal y la configuración de tarifa, horarios y cupos.
+Aplicación web en español con **Next.js 16, TypeScript, Tailwind CSS 4 y PostgreSQL 17**. Incluye reservas públicas con desglose de adultos y niños, calendario diario, configuración de cupos, salidas extra por fecha, pagos recibidos, comisiones, gastos y reportes mensuales.
 
 ## Visualizar el programa
 
-### Abrir con doble clic en Windows (sistema ya configurado)
+### Windows: descarga, actualización y acceso directo
 
-Abre **INICIAR_MISS_SKY.bat** dentro de la carpeta original donde ya tienes `package.json` y `.env.local`. El archivo comprueba Node.js, inicia Docker Desktop si hace falta, espera a que responda, inicia PostgreSQL, aplica el esquema sin borrar registros y abre `/admin` cuando Next.js está listo. Si la aplicación ya responde en el puerto 3000, abre el panel existente sin lanzar otro servidor.
+Consulta [LEEME_PRIMERO_WINDOWS.md](LEEME_PRIMERO_WINDOWS.md). En la carpeta original, instala dependencias con `npm ci`, crea el acceso directo con `npm run escritorio` y abre el programa con `npm run abrir`. Después usa doble clic en **Miss Sky Reservas** desde el escritorio. Conserva `.env.local` y el volumen de PostgreSQL. El archivo BAT anterior sigue disponible; no desactives las protecciones de Windows si lo bloquean.
 
-Mantén la ventana del programa y Docker abiertos mientras trabajas. Para detener la aplicación presiona Ctrl+C en su ventana. Se requieren Node.js 24 o posterior, npm, Windows PowerShell y Docker Desktop con WSL funcionando. La primera descarga de dependencias necesita internet. No modifica políticas de PowerShell ni funciones de Windows.
-
-Si descargas el proyecto de nuevo, copia **solo `INICIAR_MISS_SKY.bat`** a la carpeta que ya usabas. No reemplaces `.env.local` ni borres el volumen de PostgreSQL. El lanzador muestra un mensaje si falta la configuración y conserva abiertas las ventanas con errores para facilitar el diagnóstico. Este arranque es local; no publica el sitio en internet.
+Para compartir reservas entre varias computadoras, ambas deben usar el mismo servidor y la misma base. Una descarga local por equipo no sincroniza bases distintas. La guía explica los accesos web cuando exista el alojamiento central.
 
 Requiere Node.js 24 y npm. Desde el repositorio:
 
@@ -45,10 +43,10 @@ En `/admin` → **Configuración**, establece la tarifa, la moneda (CRC o USD) y
 
 ## Flujo disponible
 
-1. El cliente elige una fecha, la cantidad de personas y una salida disponible.
+1. El cliente elige una fecha, la cantidad de adultos y niños y una salida disponible.
 2. Completa nombre, correo, teléfono, nota opcional y consentimiento.
 3. Revisa los datos y confirma. El servidor valida nuevamente precio y cupos, registra al cliente y entrega un código de reserva.
-4. El personal consulta las reservas, los contactos y el calendario. Puede configurar salidas y tarifa desde el panel.
+4. El personal consulta las reservas, los contactos y el calendario. Puede configurar salidas, cupos totales y máximos de adultos y niños desde el panel. Las salidas marcadas como extra requieren activación manual por fecha.
 
 El precio se calcula en el servidor, en centavos enteros. Las transacciones bloquean la salida al contar cupos para evitar sobreventa por solicitudes simultáneas. El panel usa una sesión firmada de ocho horas en una cookie HttpOnly, SameSite y Secure en producción. Las escrituras verifican el origen de la solicitud. El acceso inicial usa una contraseña compartida; las cuentas individuales y permisos quedan para una siguiente etapa.
 
@@ -83,13 +81,23 @@ Las pruebas de integración requieren `TEST_DATABASE_URL` apuntando a una **base
 npm run test:integration
 ```
 
-La primera etapa fue comprobada con siete pruebas de validación y seguridad y cuatro pruebas de integración PostgreSQL, además del flujo del navegador. Las migraciones y el arranque local se ejecutaron dos veces para verificar su repetibilidad.
+Las verificaciones incluyen validación, origen de solicitudes, CSV seguro y pruebas PostgreSQL de concurrencia de cupos, salidas extra, desglose histórico, idempotencia, comisiones, correcciones y reportes por moneda. El lanzador de Windows tiene validación de sintaxis; necesita una comprobación real en Windows.
 
-## Alcance de esta primera etapa
+## Alcance y límites
 
-- La reserva se guarda con **pago pendiente**. No se cobran tarjetas ni se registran abonos todavía.
-- El esquema de pagos ya está preparado; registro de pagos, conciliación, cancelaciones, exportación de reportes y notificaciones por correo quedan para la siguiente etapa.
+- La reserva se guarda con **pago pendiente**. El personal registra abonos recibidos sin superar el total. No se cobran tarjetas desde el sistema.
+- Se registran gastos y pagos de comisiones del 10 % del total de cada reserva asociada. Los reportes mensuales usan la fecha del pago, separan USD/CRC y exportan CSV. Las correcciones anulan con motivo, conservando el historial. No hay conciliación bancaria automática, reembolsos ni cancelación de reservas en esta versión.
 - La confirmación se muestra en pantalla: no se envía un correo automáticamente.
-- Las listas administrativas muestran hasta 200 reservas recientes por fecha de visita y los contactos de esas reservas. Falta paginación y un directorio completo de clientes.
+- Las listas de reservas recientes y clientes muestran hasta 200 reservas por fecha de visita. El calendario diario, los indicadores de hoy y los reportes financieros consultan todos los registros aplicables. Falta un directorio paginado de todos los clientes.
 - La información de privacidad es provisional. Antes de publicar, hay que completar responsable, contacto y conservación de datos, configurar respaldo de PostgreSQL, un limitador compartido de solicitudes para producción y cuentas individuales del personal si se requieren.
 - El contenedor y las claves locales son de desarrollo. No se debe asumir que el volumen Docker se conserva en nuevas tareas de la nube: para datos operativos usa un PostgreSQL externo persistente y copias de seguridad. Un despliegue público necesita PostgreSQL persistente, HTTPS, variables privadas del proveedor y una revisión de operación. No está desplegado ni publicado.
+
+## Operación financiera y migraciones
+
+`src/lib/operations.ts` concentra operaciones administrativas transaccionales y reportes; `src/app/api/admin/operations/route.ts` exige sesión para lectura y origen válido para escrituras. `src/components/operations-panel.tsx` contiene el calendario diario y los formularios. `database/002_operations.sql` añade datos sin eliminar los anteriores. `scripts/migrate.mjs` ejecuta migraciones ordenadas una sola vez y conserva su historial.
+
+Los pagos y los gastos requieren un ID de solicitud UUID: una repetición idéntica no duplica registros y un mismo ID con datos diferentes se rechaza. Las comisiones se redondean al centavo; un pago de comisión genera un gasto y asignaciones contra reservas, y su anulación restaura la deuda. El saldo mensual es ingresos cobrados menos gastos pagados; las comisiones pendientes no se cuentan como gastos pagados.
+
+El logo de `public/miss-sky-logo.png` se renderizó directamente del PDF oficial aportado por el usuario, con fondo transparente y sin el margen vacío de la hoja.
+
+Para usarla desde el canopy y administración en lugares diferentes, consulta [PUBLICAR_PARA_DOS_OFICINAS.md](PUBLICAR_PARA_DOS_OFICINAS.md). La versión debe publicarse con una única base central; los accesos directos de cada computadora abrirán la misma dirección.

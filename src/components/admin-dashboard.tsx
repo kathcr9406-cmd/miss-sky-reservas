@@ -24,7 +24,7 @@ import {
   Info,
 } from "lucide-react";
 import { Brand } from "./brand";
-import { Calendar } from "./calendar";
+import { OperationsPanel } from "./operations-panel";
 import { formatDate, formatMoney, formatTime } from "@/lib/format";
 import type { TourSettings, Schedule, Booking } from "@/lib/types";
 
@@ -114,17 +114,19 @@ export function AdminDashboard({
   schedules,
   connected,
   today,
+  overview,
 }: {
   settings: TourSettings;
   bookings: Booking[];
   schedules: Schedule[];
   connected: boolean;
   today: string;
+  overview: { reservations: number; people: number; unpaid: number };
 }) {
   const router = useRouter();
   const [section, setSection] = useState<Section>("overview");
   const [search, setSearch] = useState("");
-  const [calendarDate, setCalendarDate] = useState(today);
+
   const [price, setPrice] = useState(
     settings.priceCents === null ? "" : String(settings.priceCents / 100),
   );
@@ -152,19 +154,17 @@ export function AdminDashboard({
     settings.priceCents !== null &&
     schedules.some((s) => s.active);
   const active = bookings.filter((b) => b.status !== "cancelled");
-  const todayBookings = active.filter((b) => b.visit_date === today);
   const title = navigation.find((n) => n.id === section)!.label;
-  const unpaid = active.filter((b) => b.payment_status !== "paid");
+
   const descriptions: Record<Section, string> = {
     overview: "Cada visita, organizada. Cada aventura, a un paso.",
     bookings:
       "Consulta las 200 reservaciones más recientes por fecha de visita.",
-    calendar:
-      "Consulta las visitas de una fecha dentro de las 200 reservas más recientes.",
+    calendar: "Todas las reservas del día y activación de salidas extra.",
     customers: "Contactos de las 200 reservaciones más recientes.",
     settings:
       "Define la tarifa general, las salidas y los cupos del Canopy Tour.",
-    payments: "Estado de pago de las 200 reservaciones más recientes.",
+    payments: "Pagos, gastos, comisiones y reportes mensuales.",
   };
   async function logout() {
     setLoggingOut(true);
@@ -303,7 +303,7 @@ export function AdminDashboard({
                 </div>
                 <strong>
                   {connected
-                    ? String(todayBookings.length).padStart(2, "0")
+                    ? String(overview.reservations).padStart(2, "0")
                     : "—"}
                 </strong>
                 <small>{formatDate(today, true)} · America/Costa_Rica</small>
@@ -313,22 +313,18 @@ export function AdminDashboard({
                   Personas para hoy <Users size={18} />
                 </div>
                 <strong>
-                  {connected
-                    ? String(
-                        todayBookings.reduce((n, b) => n + b.participants, 0),
-                      ).padStart(2, "0")
-                    : "—"}
+                  {connected ? String(overview.people).padStart(2, "0") : "—"}
                 </strong>
-                <small>Dentro de las últimas 200 reservas</small>
+                <small>Todas las reservas vigentes</small>
               </article>
               <article className="stat-card">
                 <div>
                   Reservas con pago pendiente <Wallet size={18} />
                 </div>
                 <strong>
-                  {connected ? String(unpaid.length).padStart(2, "0") : "—"}
+                  {connected ? String(overview.unpaid).padStart(2, "0") : "—"}
                 </strong>
-                <small>Dentro de las últimas 200 reservas</small>
+                <small>Todas las reservas vigentes</small>
               </article>
             </div>
             <section className="admin-card">
@@ -455,56 +451,10 @@ export function AdminDashboard({
           </section>
         )}
         {section === "calendar" && (
-          <>
-            <section className="admin-card">
-              <div className="admin-card-heading">
-                <h2>Elige una fecha de visita</h2>
-                <CalendarDays size={17} />
-              </div>
-              <div className="admin-card-body" style={{ maxWidth: 360 }}>
-                <Calendar
-                  today={today}
-                  value={calendarDate}
-                  onChange={setCalendarDate}
-                />
-              </div>
-            </section>
-            <section className="admin-card">
-              <div className="admin-card-heading">
-                <h2>{formatDate(calendarDate)}</h2>
-                <span>
-                  {active.filter((b) => b.visit_date === calendarDate).length}{" "}
-                  reservas
-                </span>
-              </div>
-              <BookingTable
-                bookings={active.filter((b) => b.visit_date === calendarDate)}
-              />
-            </section>
-          </>
+          <OperationsPanel mode="daily" today={today} />
         )}
         {section === "payments" && (
-          <>
-            <div className="notice" style={{ margin: "0 0 24px" }}>
-              <Info size={17} />
-              <div>
-                <strong>Primera etapa del sistema</strong>
-                <p>
-                  Puedes consultar el estado de pago de cada reserva. El
-                  registro de abonos, la conciliación y la exportación de
-                  reportes se desarrollarán en la siguiente etapa. Esta página
-                  no realiza cobros.
-                </p>
-              </div>
-            </div>
-            <section className="admin-card">
-              <div className="admin-card-heading">
-                <h2>Reservaciones con pago pendiente</h2>
-                <span>{unpaid.length} registros</span>
-              </div>
-              <BookingTable bookings={unpaid} />
-            </section>
-          </>
+          <OperationsPanel mode="finance" today={today} />
         )}
         {section === "settings" && (
           <form onSubmit={saveSettings}>
@@ -609,6 +559,60 @@ export function AdminDashboard({
                         disabled={saving}
                       />
                     </div>
+                    <div className="field full age-inputs">
+                      <label>
+                        Máximo de adultos por salida
+                        <input
+                          type="number"
+                          min={0}
+                          max={200}
+                          placeholder="Hasta el cupo total"
+                          value={slot.maxAdults ?? ""}
+                          onChange={(e) =>
+                            updateSlot(slot.id, {
+                              maxAdults:
+                                e.target.value === ""
+                                  ? null
+                                  : Number(e.target.value),
+                            })
+                          }
+                          disabled={saving}
+                        />
+                      </label>
+                      <label>
+                        Máximo de niños por salida
+                        <input
+                          type="number"
+                          min={0}
+                          max={200}
+                          placeholder="Hasta el cupo total"
+                          value={slot.maxChildren ?? ""}
+                          onChange={(e) =>
+                            updateSlot(slot.id, {
+                              maxChildren:
+                                e.target.value === ""
+                                  ? null
+                                  : Number(e.target.value),
+                            })
+                          }
+                          disabled={saving}
+                        />
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={slot.conditional}
+                          onChange={(e) =>
+                            updateSlot(slot.id, {
+                              conditional: e.target.checked,
+                            })
+                          }
+                          disabled={saving}
+                        />{" "}
+                        Salida extra: el personal la activa por fecha en
+                        Calendario
+                      </label>
+                    </div>
                     <button
                       type="button"
                       className="icon-button"
@@ -664,6 +668,9 @@ export function AdminDashboard({
                         capacity: 0,
                         weekdays: [],
                         active: true,
+                        maxAdults: null,
+                        maxChildren: null,
+                        conditional: false,
                       },
                     ]);
                     setSaved(false);

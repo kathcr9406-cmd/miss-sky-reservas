@@ -39,14 +39,17 @@ export async function PUT(request: Request) {
     await client.query("UPDATE tour_schedules SET active = false");
     for (const slot of input.data.schedules) {
       await client.query(
-        `INSERT INTO tour_schedules (id,starts_at,capacity,weekdays,active) VALUES ($1,$2,$3,$4,$5)
-        ON CONFLICT(starts_at) DO UPDATE SET capacity = EXCLUDED.capacity, weekdays = EXCLUDED.weekdays, active = EXCLUDED.active`,
+        `INSERT INTO tour_schedules (id,starts_at,capacity,weekdays,active,max_adults,max_children,conditional) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        ON CONFLICT(starts_at) DO UPDATE SET capacity = EXCLUDED.capacity, weekdays = EXCLUDED.weekdays, active = EXCLUDED.active, max_adults=EXCLUDED.max_adults,max_children=EXCLUDED.max_children,conditional=EXCLUDED.conditional`,
         [
           randomUUID(),
           slot.startsAt,
           slot.capacity,
           slot.weekdays,
           slot.active,
+          slot.maxAdults,
+          slot.maxChildren,
+          slot.conditional,
         ],
       );
     }
