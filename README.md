@@ -4,6 +4,14 @@ Aplicación web en español con **Next.js 16, TypeScript, Tailwind CSS 4 y Postg
 
 ## Visualizar el programa
 
+### Abrir con doble clic en Windows (sistema ya configurado)
+
+Abre **INICIAR_MISS_SKY.bat** dentro de la carpeta original donde ya tienes `package.json` y `.env.local`. El archivo comprueba Node.js, inicia Docker Desktop si hace falta, espera a que responda, inicia PostgreSQL, aplica el esquema sin borrar registros y abre `/admin` cuando Next.js está listo. Si la aplicación ya responde en el puerto 3000, abre el panel existente sin lanzar otro servidor.
+
+Mantén la ventana del programa y Docker abiertos mientras trabajas. Para detener la aplicación presiona Ctrl+C en su ventana. Se requieren Node.js 24 o posterior, npm, Windows PowerShell y Docker Desktop con WSL funcionando. La primera descarga de dependencias necesita internet. No modifica políticas de PowerShell ni funciones de Windows.
+
+Si descargas el proyecto de nuevo, copia **solo `INICIAR_MISS_SKY.bat`** a la carpeta que ya usabas. No reemplaces `.env.local` ni borres el volumen de PostgreSQL. El lanzador muestra un mensaje si falta la configuración y conserva abiertas las ventanas con errores para facilitar el diagnóstico. Este arranque es local; no publica el sitio en internet.
+
 Requiere Node.js 24 y npm. Desde el repositorio:
 
 ```bash

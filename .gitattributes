@@ -1,0 +1,2 @@
+# cmd.exe expects CRLF for the Windows double-click launcher.
+*.bat text eol=crlf
